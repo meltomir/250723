@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery - Look at the Sea</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ポップアップ表示エリア -->
+  <div id="image-popup" class="popup-overlay">
+    <span class="popup-close">&times;</span>
+    <img id="popup-img" src="" alt="popup" />
+  </div>
+
+  <!-- ヘッダー -->
+  <header class="site-header">
+    <h1>Gallery</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">HOME</a></li>
+        <li><a href="gallery.html">GALLERY</a></li>
+        <li><a href="about.html">ABOUT</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main style="padding: 100px 24px;">
+    <h2>ギャラリー</h2>
+    <p>レトロドット絵やアートワークを展示しています。</p>
+
+    <div class="gallery-grid">
+      <img src="./assets/sample1.png" alt="sample1" class="popup-image" />
+      <img src="./assets/sample2.png" alt="sample2" class="popup-image" />
+      <img src="./assets/sample3.png" alt="sample3" class="popup-image" />
+      <img src="./assets/sample4.png" alt="sample4" class="popup-image" />
+      <img src="./assets/sample5.png" alt="sample5" class="popup-image" />
+      <img src="./assets/sample6.png" alt="sample6" class="popup-image" />
+    </div>
+  </main>
+
+  <!-- アニメーション用キャンバス -->
+  <canvas id="canvas"></canvas>
+
+  <!-- スクリプト -->
+  <script>
+    // BGM 再生
+    let bgmAudio;
+    window.addEventListener('DOMContentLoaded', () => {
+      bgmAudio = new Audio('./assets/bgm.mp3');
+      bgmAudio.loop = true;
+      bgmAudio.volume = 0.6;
+    });
+    window.addEventListener('click', () => {
+      if (bgmAudio) {
+        bgmAudio.play().catch((err) => {
+          console.warn('BGM再生失敗:', err);
+        });
+      }
+    }, { once: true });
+
+    // 女の子アニメーション
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const frameCount = 8;
+    const frameW = 100;
+    const frameH = 200;
+    const dispW = 200;
+    const dispH = 400;
+    canvas.width = dispW;
+    canvas.height = dispH;
+
+    const frames = [];
+    for (let i = 1; i <= frameCount; i++) {
+      const img = new Image();
+      img.src = `./assets/walk${i}.png`;
+      frames.push(img);
+    }
+
+    let speed = 0;
+    const damping = 0.95;
+    const gain = 0.05;
+    const maxSpeed = 0.08;
+    let framePos = 0;
+    let curIdx = 0;
+    let lastScrollY_Girl = window.scrollY;
+
+    function animateGirl() {
+      const nowY = window.scrollY;
+      const delta = nowY - lastScrollY_Girl;
+      speed += Math.abs(delta) * gain;
+      if (speed > maxSpeed) speed = maxSpeed;
+      speed *= damping;
+      framePos += speed;
+      if (framePos >= 1) {
+        const step = Math.floor(framePos);
+        curIdx = (curIdx + step) % frameCount;
+        framePos -= step;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const img = frames[curIdx];
+      if (img.complete) {
+        ctx.drawImage(img, 0, 0, frameW, frameH, 0, 0, dispW, dispH);
+      }
+
+      lastScrollY_Girl = nowY;
+      requestAnimationFrame(animateGirl);
+    }
+    animateGirl();
+
+    // ポップアップ表示処理
+    document.addEventListener('DOMContentLoaded', () => {
+      const popupOverlay = document.getElementById('image-popup');
+      const popupImg = document.getElementById('popup-img');
+      const closeBtn = document.querySelector('.popup-close');
+
+      document.querySelectorAll('.popup-image').forEach(img => {
+        img.addEventListener('click', () => {
+          popupImg.src = img.src;
+          popupOverlay.style.display = 'flex';
+        });
+      });
+
+      closeBtn.addEventListener('click', () => {
+        popupOverlay.style.display = 'none';
+      });
+
+      popupOverlay.addEventListener('click', (e) => {
+        if (e.target === popupOverlay) {
+          popupOverlay.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
